@@ -75,7 +75,7 @@ func eachWord(s string, buf *[1 + tokenHitCap]byte, emit func([]byte)) {
 				continue
 			}
 		}
-		// Two bytes is the shortest word, and one past 64 the longest.
+		// Two bytes is the shortest word. A word is cut once it passes 64.
 		if n >= 1+2 {
 			emit(buf[:n])
 		}
