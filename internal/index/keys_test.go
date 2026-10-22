@@ -276,9 +276,7 @@ func TestAKeyerCarriesNothingFromOneMessageToTheNext(t *testing.T) {
 		var got []string
 		k.keys(text, when, func(b []byte) { got = append(got, string(b)) })
 		want := legacyTextKeys(text)
-		for _, d := range dateTokens(when) {
-			want = append(want, d)
-		}
+		want = append(want, dateTokens(when)...)
 		if g, w := distinctSorted(got), distinctSorted(want); !slices.Equal(g, w) {
 			t.Fatalf("keys(%q, %v) = %q, want %q", text, when, g, w)
 		}
