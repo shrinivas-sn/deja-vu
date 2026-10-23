@@ -1131,12 +1131,22 @@ func snapshotHoldsDejaWiring(b []byte) bool {
 	return mentionsDeja(out)
 }
 
-// withoutDejaListNames is v without the list items that are the bare name.
+// dejaEntryKeys are the keys deja puts its own name under to identify an entry.
+var dejaEntryKeys = map[string]bool{"name": true, "id": true, "label": true}
+
+// withoutDejaListNames is v without the list items and map values that are the
+// bare name. A key named deja stays: that is deja's entry. So does a value under
+// the keys deja names its own entries by (`"name": "deja"` in its plugin package,
+// `"id"` and `"label"` in grok's server list). Any other value is the reader's own
+// choice, as in OpenClaw's `plugins.slots.memory` (#5308).
 func withoutDejaListNames(v any) any {
 	switch t := v.(type) {
 	case map[string]any:
 		m := make(map[string]any, len(t))
 		for k, c := range t {
+			if s, ok := c.(string); ok && !dejaEntryKeys[k] && strings.TrimSpace(s) == "deja" {
+				continue
+			}
 			m[k] = withoutDejaListNames(c)
 		}
 		return m
@@ -5065,6 +5075,9 @@ func installTargetNames() []string {
 		"trae", "trae-auto",
 		"trae-ide", "trae-ide-auto",
 		"muse", "muse-auto",
+		// MiniMax Code: the MCP entry alone, and the package that adds the
+		// hooks beside it.
+		"mcode", "mcode-auto",
 		"kimi", "kimi-auto",
 		"hermes", "hermes-auto",
 		"pi", "pi-auto",
@@ -5244,6 +5257,10 @@ func existingTargetChecks() map[string]string {
 		"workbuddy":    filepath.Join(sources.WorkBuddyConfigDir(), "projects"),
 		"trae":         filepath.Join(sources.TraeRoot(), "sessions"), // the same: deja creates traecli.toml
 		"muse":         sources.MuseRoot(),                            // the same: deja creates ~/.config/muse
+		// The session store, not the config: deja creates mcp.json and the
+		// plugin package itself, so keying on the config would make every
+		// machine a MiniMax Code machine after one install.
+		"mcode": sources.McodeRoot(),
 		// The IDE's own globalStorage, not User/: deja writes User/mcp.json.
 		"trae-ide": filepath.Join(traeIDEUserDir(), "globalStorage"),
 		// Reasonix's own config.toml, which it writes on first run. deja
